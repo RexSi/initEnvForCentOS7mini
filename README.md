@@ -1,0 +1,1 @@
+# initEnvForCentOS7mini
