@@ -6,28 +6,28 @@
 # "inst.stage2=hd:LABEL=CentOS\x207\x20x86_64 rd.live.check" change to "repo=hd:/dev/sdb1:/"
 
 if [[ `whoami` != "root" ]]; then
-	echo "Please use root account run it."
-	exit 1
+    echo "Please use root account run it."
+    exit 1
 fi
 
 # setup network
 ip_address=$(ip -o -4 addr | grep -v "127.0.0.*" | awk -F ' |/' '{print $7}')
 if [ -z ${ip_address} ]; then
 
-	Eth=$(ip addr | sed -n "/^2/p" | awk -F ' |:' '{print $3}')
-	if [ -z ${Eth} ]; then
-		echo "No found network devices, please check it."
-		exit 1
-	fi
-	sed -in "/ONBOOT=no/s/no/yes/" "/etc/sysconfig/network-scripts/ifcfg-${Eth}"
-	service network restart
+    Eth=$(ip addr | sed -n "/^2/p" | awk -F ' |:' '{print $3}')
+    if [ -z ${Eth} ]; then
+        echo "No found network devices, please check it."
+        exit 1
+    fi
+    sed -in "/ONBOOT=no/s/no/yes/" "/etc/sysconfig/network-scripts/ifcfg-${Eth}"
+    service network restart
     # check ip after wait 20s.
-	sleep 20
+    sleep 20
 fi
 
 if [ -z ${ip_address} ]; then
-	echo "Obtion ip failed. Please check network."
-	exit 1
+    echo "Obtion ip failed. Please check network."
+    exit 1
 fi
 
 # first yum update
@@ -52,6 +52,9 @@ yum -y groupinstall xfce
 # start the GUI on boot
 [ $? -eq 0 ] && systemctl set-default graphical.target
 
+# set screen size
+xrandr -s 1920x1200 -r 60
+
 # install chinese font and china input method
 # install cjkuni-ukai-fonts
 
@@ -73,10 +76,18 @@ yum -y install expect
 # install ftp
 yum -y install ftp
 
-# install python
+# install python (rpm -ql yum | grep "sit-packages/yum$"  for "No module named yum")
 yum -y groupinstall python
 
-############################################################
+# install java   export JAVA_HOME=/usr/java/jdk1.8.0_92
+curl -L -O http://download.oracle.com/otn-pub/java/jdk/8u92-b14/jdk-8u92-linux-x64.rpm
+rpm -ivh jdk-8u92-linux-x64.rpm
+
+
+# install python-devel
+#yum -y install python-devel
+
+#############################################################
 # install python3
 # yum -y install yum-utils
 # yum-builddep python
@@ -86,9 +97,27 @@ yum -y groupinstall python
 # ./config
 # make && make install
 #############################################################
+#############################################################
+#
+# refer: http://toomuchdata.com/2014/02/16/how-to-install-python-on-centos/
+#
+# install python2.7.12
+# curl -L -O https://python.org/ftp/python/2.7.12/Python-2.7.12.tar.xz
+# tar -xf Python-2.7.12.tar.xz
+# cd Python-2.7.12.tar.xz
+# ./configure --prefix=/usr/local --enable-shared --enable-unicode=ucs4 LDFLAGS="-Wl,-rpath /usr/local/lib"
+# make && make altinstall
+# mv /usr/bin/python2 /usr/bin/python2.bk
+# ln -s /usr/local/bin/python2 /usr/bin/python2
+# mv /usr/bin/python2-config /usr/bin/pyton2-config.bk
+# ln -s /usr/local/bin/python2-config /usr/bin/python2-config
+#
+#############################################################
 
 # install ssh-server
 yum -y install ssh-server
+# 
+sed -i "s/^PermitRootLogin yes/PermitRootLogin no/s" /etc/ssh/sshd_config
 
 # install cmake
 yum -y install cmake
