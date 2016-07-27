@@ -47,6 +47,9 @@ yum -y groupinstall "X Window system"
 # install Xfce4
 yum -y groupinstall xfce
 
+# install screensaver xlockmore
+yum -y install xscreensaver xlockmore
+
 # launch Xfce
 [ $? -eq 0 ] && systemctl isolate graphical.target
 # start the GUI on boot
@@ -116,7 +119,7 @@ rpm -ivh jdk-8u92-linux-x64.rpm
 
 # install ssh-server
 yum -y install ssh-server
-# 
+#
 sed -i "s/^PermitRootLogin yes/PermitRootLogin no/s" /etc/ssh/sshd_config
 
 # install cmake
@@ -130,6 +133,25 @@ yum -y install gcc-c++
 
 # install docker
 yum -y install docker
+
+# install asciidoc for generate html doc
+yum -y install asciidoc
+
+# install xmlto
+yum -y install xmlto
+
+# install docbook2x-texi
+yum -y --enablerepo="epel" install docbook2X
+ln -s /usr/bin/db2x_docbook2texi /usr/bin/docbook2x-texi
+
+# install openssl-devel
+yum -y install openssl-devel
+
+# instal perl-devel
+yum -y install perl-devel
+
+# install squashfs
+yum -y install squashfs-tools
 
 # install vnc-server
 yum -y install vnc-server
@@ -149,3 +171,53 @@ yum -y install vnc-server
 # # twm &
 # startxfce4 &
 ####################################################
+
+# vi /usr/bin/yum
+# vi /usr/libexec/urlgrabber-ext-down
+# change  #!usr/bin/python
+
+# install tftp server
+yum -y install tftp-server
+
+# config tftp server
+# vi /etc/xinetd.d/tftp
+# change disable = yes  --> disable = no
+# server_args tftp root directory
+
+# install NFS server
+yum -y install nfs-utils nfs-utils-lib
+
+# Created the share
+mkdir -p /root/nfs
+chmod 777 /root/nfs
+
+# exported fine
+# For basic options of exports
+# Option  Description
+# rw  Allow both read and write requests on a NFS volume.
+# ro  Allow only read requests on a NFS volume.
+# sync    Reply to requests only after the changes have been committed to stable storage. (Default)
+# async   This option allows the NFS server to violate the NFS protocol and reply to requests before any changes made by that request have been committed to stable storage.
+# secure  This option requires that requests originate on an Internet port less than IPPORT_RESERVED (1024). (Default)
+# insecure    This option accepts all ports.
+# wdelay  Delay committing a write request to disc slightly if it suspects that another related write request may be in progress or may arrive soon. (Default)
+# no_wdelay   This option has no effect if async is also set. The NFS server will normally delay committing a write request to disc slightly if it suspects that another related write request may be in progress or may arrive soon. This allows multiple write requests to be committed to disc with the one operation which can improve performance. If an NFS server received mainly small unrelated requests, this behaviour could actually reduce performance, so no_wdelay is available to turn it off.
+# subtree_check   This option enables subtree checking. (Default)
+# no_subtree_check    This option disables subtree checking, which has mild security implications, but can improve reliability in some circumstances.
+# root_squash Map requests from uid/gid 0 to the anonymous uid/gid. Note that this does not apply to any other uids or gids that might be equally sensitive, such as user bin or group staff.
+# no_root_squash  Turn off root squashing. This option is mainly useful for disk-less clients.
+# all_squash  Map all uids and gids to the anonymous user. Useful for NFS exported public FTP directories, news spool directories, etc.
+# no_all_squash   Turn off all squashing. (Default)
+# anonuid=UID These options explicitly set the uid and gid of the anonymous account. This option is primarily useful for PC/NFS clients, where you might want all requests appear to be from one user. As an example, consider the export entry for /home/joe in the example section below, which maps all requests to uid 150.
+# anongid=GID Read above (anonuid=UID)
+
+echo "/root/nfs clientip/24 (ro)" > /etc/exported
+
+# Enable/start services
+systemctl enable/start rpcbind
+systemctl enable/start nfs-server
+systemctl enable/start nfs-lock
+systemctl enable/start nfs-idmap
+
+firewall-cmd --add-service=nfs --permanen
+firewall-cmd --reload
